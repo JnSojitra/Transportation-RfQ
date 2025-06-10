@@ -1,3 +1,2 @@
 flask
 gunicorn
-Added requirements.txt for Render
