@@ -1,11 +1,11 @@
-# Transportation-RfQ
+# main.py
+
 from flask import Flask, request, jsonify
 import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
 DATABASE = 'transport_rfq.db'
-
 
 def init_db():
     conn = sqlite3.connect(DATABASE)
@@ -40,6 +40,9 @@ def init_db():
     conn.commit()
     conn.close()
 
+@app.before_first_request
+def setup():
+    init_db()
 
 @app.route('/register', methods=['POST'])
 def register_vendor():
@@ -51,7 +54,6 @@ def register_vendor():
     conn.commit()
     conn.close()
     return jsonify({"message": "Vendor registered successfully"}), 201
-
 
 @app.route('/create_rfq', methods=['POST'])
 def create_rfq():
@@ -74,7 +76,6 @@ def create_rfq():
     conn.close()
     return jsonify({"message": f"RFQ {rfq_id} created and vendors notified"}), 201
 
-
 @app.route('/submit_bid', methods=['POST'])
 def submit_bid():
     data = request.json
@@ -87,7 +88,6 @@ def submit_bid():
     conn.close()
     return jsonify({"message": "Bid submitted successfully"}), 201
 
-
 @app.route('/get_rfqs', methods=['GET'])
 def get_rfqs():
     conn = sqlite3.connect(DATABASE)
@@ -97,7 +97,6 @@ def get_rfqs():
     conn.close()
     return jsonify(rfqs)
 
-
 @app.route('/get_bids/<int:rfq_id>', methods=['GET'])
 def get_bids(rfq_id):
     conn = sqlite3.connect(DATABASE)
@@ -106,8 +105,3 @@ def get_bids(rfq_id):
     bids = c.fetchall()
     conn.close()
     return jsonify(bids)
-
-
-if __name__ == '__main__':
-    init_db()
-    app.run(debug=True)
