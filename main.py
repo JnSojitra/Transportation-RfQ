@@ -40,9 +40,8 @@ def init_db():
     conn.commit()
     conn.close()
 
-import os
-
-if not os.path.exists('transport_rfq.db'):
+@app.before_first_request
+def setup():
     init_db()
 
 @app.route('/register', methods=['POST'])
