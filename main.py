@@ -1,12 +1,12 @@
-# main.py
-
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template_string
 import sqlite3
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 DATABASE = 'transport_rfq.db'
 
+# ✅ Initialize database
 def init_db():
     conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
@@ -40,11 +40,31 @@ def init_db():
     conn.commit()
     conn.close()
 
-import os
-
-if not os.path.exists('transport_rfq.db'):
+# ✅ Initialize if not already created
+if not os.path.exists(DATABASE):
     init_db()
 
+# ✅ HTML homepage with buttons
+@app.route('/')
+def home():
+    html = """
+    <html>
+        <head>
+            <title>Welcome to Buckle Track</title>
+        </head>
+        <body style="font-family: Arial; text-align: center; margin-top: 40px;">
+            <h1>👋 Welcome to Buckle Track</h1>
+            <p>Transportation RFQ System is Running!</p>
+            <br><br>
+            <a href="/get_rfqs"><button style="padding:10px 20px;margin:5px;">📋 View All RFQs</button></a>
+            <a href="/get_bids/1"><button style="padding:10px 20px;margin:5px;">💰 View Bids for RFQ ID 1</button></a>
+            <p style="margin-top:40px;color:gray;">Note: Use tools like Postman or cURL for /register, /create_rfq, /submit_bid (POST endpoints)</p>
+        </body>
+    </html>
+    """
+    return render_template_string(html)
+
+# ✅ Register vendor
 @app.route('/register', methods=['POST'])
 def register_vendor():
     data = request.json
@@ -56,6 +76,7 @@ def register_vendor():
     conn.close()
     return jsonify({"message": "Vendor registered successfully"}), 201
 
+# ✅ Create RFQ
 @app.route('/create_rfq', methods=['POST'])
 def create_rfq():
     data = request.json
@@ -68,7 +89,7 @@ def create_rfq():
     rfq_id = c.lastrowid
     conn.commit()
 
-    # Notify all vendors (simulated)
+    # Simulate vendor notification
     c.execute("SELECT email FROM vendors")
     vendors = c.fetchall()
     for vendor in vendors:
@@ -77,6 +98,7 @@ def create_rfq():
     conn.close()
     return jsonify({"message": f"RFQ {rfq_id} created and vendors notified"}), 201
 
+# ✅ Submit bid
 @app.route('/submit_bid', methods=['POST'])
 def submit_bid():
     data = request.json
@@ -89,6 +111,7 @@ def submit_bid():
     conn.close()
     return jsonify({"message": "Bid submitted successfully"}), 201
 
+# ✅ Get all RFQs
 @app.route('/get_rfqs', methods=['GET'])
 def get_rfqs():
     conn = sqlite3.connect(DATABASE)
@@ -98,6 +121,7 @@ def get_rfqs():
     conn.close()
     return jsonify(rfqs)
 
+# ✅ Get all bids for a specific RFQ
 @app.route('/get_bids/<int:rfq_id>', methods=['GET'])
 def get_bids(rfq_id):
     conn = sqlite3.connect(DATABASE)
